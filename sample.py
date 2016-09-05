@@ -25,6 +25,11 @@ async def on_message(message):
         return
     await bot.process_commands(message)
 
+@bot.event
+async def on_command_error(error, ctx):
+    if isinstance(error, commands.BadArgument):
+        await bot.send_message(ctx.message.channel, 'Exception: BadArgument.')
+
 @bot.command()
 async def kocka(dice : int):
     """Random egész szám generátor"""
