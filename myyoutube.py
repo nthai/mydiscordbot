@@ -4,7 +4,6 @@ import re
 import sys
 from apiclient.discovery import build
 from apiclient.errors import HttpError
-from oauth2client.tools import argparser
 
 yt_regex = re.compile(r'(http://|https://)www.youtube.com/watch\?v=(\w*).*')
 with open('youtube.tk', 'r') as input:
