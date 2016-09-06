@@ -40,6 +40,12 @@ async def kocka(dice : int):
         return
     await bot.say('Dobás ' + str(dice) + ' oldalú kockával: ' + result)
 
+@bot.command()
+async def zene(title : str):
+    """TODO: zene lejátszás"""
+    
+
+
 with open('token.tk', mode='r') as input:
     token = input.readline().strip()
     bot.run(token)
