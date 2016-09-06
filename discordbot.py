@@ -1,7 +1,11 @@
+#!/usr/bin/env python
+
 from discord.ext import commands
 import discord
 import random
 import asyncio
+import re
+import myyoutube
 
 description = "A Józsiarcúak csatorna dicsőséges botja."
 
@@ -40,10 +44,22 @@ async def kocka(dice : int):
         return
     await bot.say('Dobás ' + str(dice) + ' oldalú kockával: ' + result)
 
-@bot.command()
-async def zene(title : str):
+@bot.command(pass_context = True)
+async def zene(ctx, *, msg : str):
     """TODO: zene lejátszás"""
-    
+    tmp = await bot.say('Searching for Youtube ID...\nYour input is: ' + msg)
+    yt_code = myyoutube.get_youtube_code(msg)
+    await bot.edit_message(tmp, 'Youtube code: ' + yt_code)
+
+@bot.command()
+async def yt(*, msg : str):
+    """Youtube link kereső"""
+    tmp = await bot.say('Youtube videó keresése: ' + msg + ' . . .')
+    try:
+        ans = 'https://www.youtube.com/watch?v={0}'.format(myyoutube.search_youtube_video(msg))
+    except myyoutube.NoVideoFoundException:
+        ans = 'Nem találtam videót.'
+    await bot.edit_message(tmp, ans)
 
 
 with open('token.tk', mode='r') as input:
