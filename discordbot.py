@@ -65,11 +65,29 @@ async def yt(*, msg : str):
 @bot.command()
 async def poesearch(*, msg : str):
     """PoE Wiki kereső"""
-    tmp = await bot.say('Unique item keresése: ' + msg + '. . .')
+    tmp = await bot.say('PoE Wiki bejegyzés keresése: ' + msg + '. . .')
     try:
         name_list, link_list = mypoe.search_item(msg)
         ans = '\n'.join(['{0}: {1}'.format(name_list[idx], link_list[idx]) for idx in range(len(name_list))])
         print(name_list)
+    except mypoe.NoItemFoundException:
+        ans = 'Nem találtam itemet.'
+    except mypoe.NetworkError:
+        ans = 'Hálózati hiba történt.'
+    await bot.edit_message(tmp, ans)
+
+@bot.command()
+async def unique(*, msg : str):
+    """Unique item kereső - TODO: fix bug"""
+    print('running unique')
+    tmp = await bot.say('Unique item keresése: ' + msg + '. . .')
+    try:
+        results = mypoe.get_item_panel(msg)
+        print(results)
+        ans = '\n'.join(['{0}: {1}'.format(results[idx][0], results[idx][1]) for idx in range(len(results))])
+        ans = '{0}\n{1}'.format(results[0][0], results[0][1])
+        print('the answer')
+        print(ans)
     except mypoe.NoItemFoundException:
         ans = 'Nem találtam itemet.'
     except mypoe.NetworkError:

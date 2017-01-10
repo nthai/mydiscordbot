@@ -4,9 +4,11 @@ import urllib.parse
 import urllib.error
 import urllib.request
 import json
+import re
+from bs4 import BeautifulSoup
 
 SEARCH_URL = 'http://pathofexile.gamepedia.com/api.php?action=opensearch&search={0}'
-ITEM_PANEL_URL = 'https://pathofexile.gamepedia.com/api.php?action=askargs&conditions=Has%%20name::{0}&printouts=Has%%20infobox%%20HTML&format=json'
+ITEM_PANEL_URL = 'https://pathofexile.gamepedia.com/api.php?action=askargs&conditions=Has%20name::{0}&printouts=Has%20infobox%20HTML&format=json'
 
 class NoItemFoundException(Exception):
     pass
@@ -40,21 +42,45 @@ def search_item(item_name : str):
         return name_list, link_list
 
 def get_item_panel(item : str):
-    # TODO
+    print('getting item panel...')
     try:
         item_name, item_link = search_item(item)
     except NetworkError:
         print('Network Error.')
-        return None
+        raise NetworkError
     except NoItemFoundException:
         print('No item found exception.')
-        return None
+        raise NoItemFoundException
+    print('item found!')
     query_url = ITEM_PANEL_URL.format(urllib.parse.quote(item_name[0]))
-    print(query_url)
+    query_req = urllib.request.Request(query_url, headers={'User-Agent' : 'PoeWiki'})
+    try:
+        response = urllib.request.urlopen(query_req).read().decode('utf-8')
+    except urllib.error.HTTPError as err:
+        print('Error code: {0}'.format(err.code))
+        raise NetworkError
+    except urllib.error.URLError as err:
+        print('Error code: {0}'.format(err.reason))
+        raise NetworkError
+    
+    print('json data retrieved!')
+    json_data = json.loads(response)
+    results = []
+    
+    for key, item in json_data['query']['results'].items():
+        print('processing ' + str(key) + '...')
+        soup = BeautifulSoup(item['printouts']['Has infobox HTML'][0], 'html.parser')
+        results.append((key, soup.get_text().encode('utf-8')))
+    
+    if len(results) > 10:
+        results = results[0:10]
+
+    return results
 
 
 def main():
-    print(search_item('vessel'))
+    results = get_item_panel('Atziri\'s Disfavour')
+    print(results[0][1])
 
 if __name__ == '__main__':
     main()
