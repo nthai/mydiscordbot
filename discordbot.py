@@ -6,6 +6,7 @@ import random
 import asyncio
 import re
 import myyoutube
+import mypoe
 
 description = "A Józsiarcúak csatorna dicsőséges botja."
 
@@ -61,6 +62,19 @@ async def yt(*, msg : str):
         ans = 'Nem találtam videót.'
     await bot.edit_message(tmp, ans)
 
+@bot.command()
+async def poesearch(*, msg : str):
+    """PoE Wiki kereső"""
+    tmp = await bot.say('Unique item keresése: ' + msg + '. . .')
+    try:
+        name_list, link_list = mypoe.search_item(msg)
+        ans = '\n'.join(['{0}: {1}'.format(name_list[idx], link_list[idx]) for idx in range(len(name_list))])
+        print(name_list)
+    except mypoe.NoItemFoundException:
+        ans = 'Nem találtam itemet.'
+    except mypoe.NetworkError:
+        ans = 'Hálózati hiba történt.'
+    await bot.edit_message(tmp, ans)
 
 with open('token.tk', mode='r') as input:
     token = input.readline().strip()
