@@ -16,11 +16,10 @@ class NoItemFoundException(Exception):
 class NetworkError(Exception):
     pass
 
-def search_item(item_name : str):
-    query_url = SEARCH_URL.format(urllib.parse.quote(item_name))
+def get_json(query_url : str):
     query_req = urllib.request.Request(query_url, headers={'User-Agent' : 'PoeWiki'})
     try:
-        response = urllib.request.urlopen(query_req).read().decode('utf-8')
+        response = urllib.request.urlopen(query_req).read().decode('utf-8').replace('&ndash;', '--')
     except urllib.error.HTTPError as err:
         print('Error code: {0}'.format(err.code))
         raise NetworkError
@@ -28,7 +27,11 @@ def search_item(item_name : str):
         print('Error code: {0}'.format(err.reason))
         raise NetworkError
     
-    json_data = json.loads(response)
+    return json.loads(response)
+
+def search_item(item_name : str):
+    query_url = SEARCH_URL.format(urllib.parse.quote(item_name))
+    json_data = get_json(query_url)
 
     if len(json_data[1]) == 0 or len(json_data[3]) == 0:
         raise NoItemFoundException
@@ -41,43 +44,59 @@ def search_item(item_name : str):
             link_list = json_data[3]
         return name_list, link_list
 
-def get_item_panel(item : str):
-    try:
-        item_name, item_link = search_item(item)
-    except NetworkError:
-        print('Network Error.')
-        raise NetworkError
-    except NoItemFoundException:
-        print('No item found exception.')
-        raise NoItemFoundException
-    query_url = ITEM_PANEL_URL.format(urllib.parse.quote(item_name[0]))
-    query_req = urllib.request.Request(query_url, headers={'User-Agent' : 'PoeWiki'})
-    try:
-        response = urllib.request.urlopen(query_req).read().decode('utf-8')
-    except urllib.error.HTTPError as err:
-        print('Error code: {0}'.format(err.code))
-        raise NetworkError
-    except urllib.error.URLError as err:
-        print('Error code: {0}'.format(err.reason))
-        raise NetworkError
-    
-    print('json data retrieved!')
-    json_data = json.loads(response)
+def recursive_soup(item):
+    for x in item.contents:
+        pass
+
+def get_item_info(item : str):
+    query_url = ITEM_PANEL_URL.format(urllib.parse.quote(item))
+    json_data = get_json(query_url)
     results = []
     
+    if not json_data['query']['results']:
+        raise NoItemFoundException
+
     for key, item in json_data['query']['results'].items():
         soup = BeautifulSoup(item['printouts']['Has infobox HTML'][0], 'html.parser')
-        results.append((key, soup.get_text().encode('utf-8')))
+
+        for cl in soup.find_all('em', {'class' : 'tc -value'}):
+        	cl.replace_with(cl.text)
+
+        for cl in soup.find_all('em', {'class' : 'tc -default'}):
+        	cl.replace_with(cl.text)
+
+        text = None
+        text_list = []
+
+        for child in soup.descendants:
+        	name = getattr(child, 'name', None)
+        	if name is not None:
+        		if text is not None:
+        			text_list.append(text)
+        			text = None
+        	else:
+        		if text is None:
+        			text = child
+        		else:
+        			text = text + child
+        if text is not None:
+        	text_list.append(text)
+
+        results.append((key, text_list))
     
     if len(results) > 10:
         results = results[0:10]
 
     return results
 
-
 def main():
-    results = get_item_panel('Atziri\'s Disfavour')
-    print(results[0][1])
+    # results = get_item_info('Atziri\'s Disfavour')
+    results = get_item_info('Vessel of Vinktar')
+    for result in results:
+    	print(result[0])
+    	for text in result[1]:
+    		print(text)
+    	print('\n')
 
 if __name__ == '__main__':
     main()
