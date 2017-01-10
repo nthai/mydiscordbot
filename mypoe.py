@@ -42,7 +42,6 @@ def search_item(item_name : str):
         return name_list, link_list
 
 def get_item_panel(item : str):
-    print('getting item panel...')
     try:
         item_name, item_link = search_item(item)
     except NetworkError:
@@ -51,7 +50,6 @@ def get_item_panel(item : str):
     except NoItemFoundException:
         print('No item found exception.')
         raise NoItemFoundException
-    print('item found!')
     query_url = ITEM_PANEL_URL.format(urllib.parse.quote(item_name[0]))
     query_req = urllib.request.Request(query_url, headers={'User-Agent' : 'PoeWiki'})
     try:
@@ -68,7 +66,6 @@ def get_item_panel(item : str):
     results = []
     
     for key, item in json_data['query']['results'].items():
-        print('processing ' + str(key) + '...')
         soup = BeautifulSoup(item['printouts']['Has infobox HTML'][0], 'html.parser')
         results.append((key, soup.get_text().encode('utf-8')))
     
