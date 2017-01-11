@@ -90,7 +90,7 @@ async def unique(*, msg : str):
         await bot.edit_message(tmp, 'HTTP vagy URL hiba.')
     else:
         for idx, result in enumerate(results):
-            ans = '\n'.join(result[1])
+            ans = '\n'.join(['```'] + result[1] + ['```'])
             if idx == 0:
                 await bot.edit_message(tmp, ans)
             else:
