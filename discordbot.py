@@ -78,17 +78,23 @@ async def poesearch(*, msg : str):
 
 @bot.command()
 async def unique(*, msg : str):
-    """Unique item kereső - TODO: fix bug"""
+    """Unique item kereső - Előfordulhat, hogy case-sensitive (az API-t hibáztassátok)."""
     tmp = await bot.say('Unique item keresése: ' + msg + '. . .')
     try:
-        results = mypoe.get_item_panel(msg)
-        ans = '\n'.join(['{0}: {1}'.format(results[idx][0], results[idx][1]) for idx in range(len(results))])
-        ans = '{0}\n{1}'.format(results[0][0], results[0][1])
+        results = mypoe.get_item_info(msg)
     except mypoe.NoItemFoundException:
-        ans = 'Nem találtam itemet.'
+        print('Exception: No item found.')
+        await bot.edit_message(tmp, 'Nem találtam itemet.')
     except mypoe.NetworkError:
-        ans = 'Hálózati hiba történt.'
-    await bot.edit_message(tmp, ans)
+        print('Exception: Network error.')
+        await bot.edit_message(tmp, 'HTTP vagy URL hiba.')
+    else:
+        for idx, result in enumerate(results):
+            ans = '\n'.join(result[1])
+            if idx == 0:
+                await bot.edit_message(tmp, ans)
+            else:
+                await bot.say(ans)
 
 with open('token.tk', mode='r') as input:
     token = input.readline().strip()

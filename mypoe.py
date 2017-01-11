@@ -44,10 +44,6 @@ def search_item(item_name : str):
             link_list = json_data[3]
         return name_list, link_list
 
-def recursive_soup(item):
-    for x in item.contents:
-        pass
-
 def get_item_info(item : str):
     query_url = ITEM_PANEL_URL.format(urllib.parse.quote(item))
     json_data = get_json(query_url)
@@ -60,27 +56,27 @@ def get_item_info(item : str):
         soup = BeautifulSoup(item['printouts']['Has infobox HTML'][0], 'html.parser')
 
         for cl in soup.find_all('em', {'class' : 'tc -value'}):
-        	cl.replace_with(cl.text)
+            cl.replace_with(cl.text)
 
         for cl in soup.find_all('em', {'class' : 'tc -default'}):
-        	cl.replace_with(cl.text)
+            cl.replace_with(cl.text)
 
         text = None
         text_list = []
 
         for child in soup.descendants:
-        	name = getattr(child, 'name', None)
-        	if name is not None:
-        		if text is not None:
-        			text_list.append(text)
-        			text = None
-        	else:
-        		if text is None:
-        			text = child
-        		else:
-        			text = text + child
+            name = getattr(child, 'name', None)
+            if name is not None:
+                if text is not None:
+                    text_list.append(text)
+                    text = None
+            else:
+                if text is None:
+                    text = child
+                else:
+                    text = text + child
         if text is not None:
-        	text_list.append(text)
+            text_list.append(text)
 
         results.append((key, text_list))
     
@@ -90,13 +86,25 @@ def get_item_info(item : str):
     return results
 
 def main():
-    # results = get_item_info('Atziri\'s Disfavour')
-    results = get_item_info('Vessel of Vinktar')
-    for result in results:
-    	print(result[0])
-    	for text in result[1]:
-    		print(text)
-    	print('\n')
+    try:
+        results = get_item_info(input())
+    except NoItemFoundException:
+        print('Could not find item.')
+    except NetworkError:
+        print('HTTP or URL error.')
+    else:
+        for result in results:
+            print(result[0])
+            for text in result[1]:
+                print(text)
+            print('\n')
+
+    try:
+        item_list, link_list = search_item('vessel of vinktar')
+    except NoItemFoundException:
+        print('No item found.')
+    else:
+        print(item_list)
 
 if __name__ == '__main__':
     main()
